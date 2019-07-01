@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"image"
 	"image/color"
@@ -16,10 +17,14 @@ import (
 	"github.com/shirou/gopsutil/mem"
 )
 
+var serialPort string
+
+func init() {
+	flag.StringVar(&serialPort, "port", "", "Serial port connects to")
+}
 func addLabel(img *image.RGBA, x, y int, label string) {
 	col := color.RGBA{255, 255, 255, 255}
 	point := fixed.Point26_6{fixed.Int26_6(x * 64), fixed.Int26_6(y * 64)}
-
 	d := &font.Drawer{
 		Dst:  img,
 		Src:  image.NewUniform(col),
@@ -34,9 +39,12 @@ func drawText(img *image.RGBA, line int, label string) {
 	addLabel(img, 1, height*line, label)
 }
 
-func main() {
+func generateImage(first bool) *image.RGBA {
 	v, _ := mem.VirtualMemory()
-	ones, _ := time.ParseDuration("3s")
+	var ones time.Duration
+	if first {
+		ones, _ = time.ParseDuration("3s")
+	}
 	cpus, _ := cpu.Percent(ones, true)
 
 	img := image.NewRGBA(image.Rect(0, 0, 128, 64))
@@ -45,8 +53,10 @@ func main() {
 	for i := 0; i < len(cpus); i++ {
 		drawText(img, 2+i, fmt.Sprintf("cpu%d: %5.2f %%", i+1, cpus[i]))
 	}
-
-	f, err := os.Create("hello-go.png")
+	return img
+}
+func writeToFile(img *image.RGBA, fileName string) {
+	f, err := os.Create(fileName)
 	if err != nil {
 		panic(err)
 	}
@@ -54,4 +64,19 @@ func main() {
 	if err := png.Encode(f, img); err != nil {
 		panic(err)
 	}
+}
+func getBlob(img *image.RGBA, positiveColor color.RGBA) []byte {
+	rect := img.Rect
+	for x := 0; x < rect.Max.X; x++ {
+		for y := 0; y < rect.Max.Y; y++ {
+			fmt.Printf("x:%d y:%d: %v\n", x, y, img.At(x, y))
+		}
+	}
+	blob := make([]byte, 1024)
+	return blob
+}
+func main() {
+	img := generateImage(true)
+	getBlob(img, color.RGBA{255, 255, 255, 255})
+	writeToFile(img, "hello-go.png")
 }

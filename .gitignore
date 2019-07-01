@@ -1,2 +1,5 @@
 *.png
 *.exe
+vendor/
+.idea/
+.vscode/
