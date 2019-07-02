@@ -34,6 +34,14 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:52b21e6be25049834aea5ecdde35d723c00fbdad3ea0357f2072dfb105836e02"
+  name = "github.com/tarm/serial"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "98f6abe2eb07edd42f6dfa2a934aea469acc29b7"
+
+[[projects]]
+  branch = "master"
   digest = "1:09c175055d303dadf3f82513c66e6da0b95ba22bc8e5d267a2674d16d95ea77a"
   name = "golang.org/x/image"
   packages = [
@@ -62,6 +70,7 @@
   input-imports = [
     "github.com/shirou/gopsutil/cpu",
     "github.com/shirou/gopsutil/mem",
+    "github.com/tarm/serial",
     "golang.org/x/image/font",
     "golang.org/x/image/font/basicfont",
     "golang.org/x/image/math/fixed",

@@ -17,16 +17,17 @@ import (
 
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/mem"
+	"github.com/tarm/serial"
 )
 
 var serialPort string
-var seriallBaud uint
+var seriallBaud int
 var runMode string
 var sleepTime time.Duration
 
 func init() {
 	flag.StringVar(&serialPort, "port", "", "Serial port connects to")
-	flag.UintVar(&seriallBaud, "baud", 115200, "Serail port baudrate")
+	flag.IntVar(&seriallBaud, "baud", 115200, "Serail port baudrate")
 	flag.StringVar(&runMode, "mode", "", "Run mode: ascii, image, serial")
 	flag.DurationVar(&sleepTime, "sleep", 1*time.Second, "Sleep between sendings")
 }
@@ -119,9 +120,18 @@ func (w) Close() error {
 	log.Printf("Closed dummy writer")
 	return nil
 }
-func getSerialWriter() io.WriteCloser {
+func getDummyWriter() io.WriteCloser {
 	return &w{}
 }
+func getSerialWriter() io.WriteCloser {
+	c := &serial.Config{Name: serialPort, Baud: seriallBaud}
+	s, err := serial.OpenPort(c)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return s
+}
+
 func main() {
 	flag.Parse()
 	switch runMode {
@@ -134,7 +144,7 @@ func main() {
 		img := generateImage(true)
 		writeToFile(img, "out.png")
 	case "serial":
-		writer := getSerialWriter()
+		writer := getDummyWriter()
 		defer writer.Close()
 		for {
 			img := generateImage(false)
