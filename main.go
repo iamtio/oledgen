@@ -6,6 +6,8 @@ import (
 	"image"
 	"image/color"
 	"image/png"
+	"io"
+	"log"
 	"os"
 	"time"
 
@@ -18,9 +20,15 @@ import (
 )
 
 var serialPort string
+var seriallBaud uint
+var runMode string
+var sleepTime time.Duration
 
 func init() {
 	flag.StringVar(&serialPort, "port", "", "Serial port connects to")
+	flag.UintVar(&seriallBaud, "baud", 115200, "Serail port baudrate")
+	flag.StringVar(&runMode, "mode", "", "Run mode: ascii, image, serial")
+	flag.DurationVar(&sleepTime, "sleep", 1*time.Second, "Sleep between sendings")
 }
 func addLabel(img *image.RGBA, x, y int, label string) {
 	col := color.RGBA{0, 0, 0, 255}
@@ -100,9 +108,46 @@ func printBlob(blob []uint8, bytesLineSize int) {
 		printByte(b)
 	}
 }
+
+type w struct{}
+
+func (w) Write(b []byte) (int, error) {
+	log.Printf("successfuly wrote: %d bytes\n", len(b))
+	return len(b), nil
+}
+func (w) Close() error {
+	log.Printf("Closed dummy writer")
+	return nil
+}
+func getSerialWriter() io.WriteCloser {
+	return &w{}
+}
 func main() {
-	img := generateImage(true)
-	blob := getBlob(img, color.RGBA{0, 0, 0, 255})
-	printBlob(blob, 16)
-	writeToFile(img, "hello-go.png")
+	flag.Parse()
+	switch runMode {
+	case "ascii":
+		img := generateImage(true)
+		blob := getBlob(img, color.RGBA{0, 0, 0, 255})
+		printBlob(blob, 16)
+		fmt.Print("\n")
+	case "image":
+		img := generateImage(true)
+		writeToFile(img, "out.png")
+	case "serial":
+		writer := getSerialWriter()
+		defer writer.Close()
+		for {
+			img := generateImage(false)
+			blob := getBlob(img, color.RGBA{0, 0, 0, 255})
+			_, err := writer.Write(blob)
+			if err != nil {
+				panic(err)
+			}
+			time.Sleep(sleepTime)
+		}
+	default:
+		fmt.Println("Nothing to do! write -mode flag to run something!")
+		os.Exit(1)
+	}
+
 }
