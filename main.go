@@ -23,7 +23,7 @@ func init() {
 	flag.StringVar(&serialPort, "port", "", "Serial port connects to")
 }
 func addLabel(img *image.RGBA, x, y int, label string) {
-	col := color.RGBA{255, 255, 255, 255}
+	col := color.RGBA{0, 0, 0, 255}
 	point := fixed.Point26_6{fixed.Int26_6(x * 64), fixed.Int26_6(y * 64)}
 	d := &font.Drawer{
 		Dst:  img,
@@ -65,18 +65,51 @@ func writeToFile(img *image.RGBA, fileName string) {
 		panic(err)
 	}
 }
-func getBlob(img *image.RGBA, positiveColor color.RGBA) []byte {
+func getBlob(img *image.RGBA, positiveColor color.RGBA) []uint8 {
 	rect := img.Rect
-	for x := 0; x < rect.Max.X; x++ {
-		for y := 0; y < rect.Max.Y; y++ {
-			fmt.Printf("x:%d y:%d: %v\n", x, y, img.At(x, y))
+
+	blobSize := rect.Max.X * rect.Max.Y / 8
+	blob := make([]uint8, blobSize)
+
+	var bitNum int
+	for y := 0; y < rect.Max.Y; y++ {
+		for x := 0; x < rect.Max.X; x++ {
+			bitShift := uint(bitNum % 8)
+			byteNum := bitNum / 8
+
+			bit := uint8(0)
+			if img.At(x, y) == positiveColor {
+				bit = 1
+			}
+			blob[byteNum] |= (bit << bitShift)
+			bitNum++
 		}
 	}
-	blob := make([]byte, 1024)
 	return blob
+}
+func printByte(b uint8) {
+	fmt.Printf("%d%d%d%d%d%d%d%d",
+		(b>>0)&1,
+		(b>>1)&1,
+		(b>>2)&1,
+		(b>>3)&1,
+		(b>>4)&1,
+		(b>>5)&1,
+		(b>>6)&1,
+		(b>>7)&1,
+	)
+}
+func printBlob(blob []uint8, bytesLineSize int) {
+	for index, b := range blob {
+		if index%bytesLineSize == 0 && index != 0 {
+			fmt.Printf("\n")
+		}
+		printByte(b)
+	}
 }
 func main() {
 	img := generateImage(true)
-	getBlob(img, color.RGBA{255, 255, 255, 255})
+	blob := getBlob(img, color.RGBA{0, 0, 0, 255})
+	printBlob(blob, 16)
 	writeToFile(img, "hello-go.png")
 }
