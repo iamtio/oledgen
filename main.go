@@ -151,7 +151,7 @@ func main() {
 		img := generateImage(true)
 		writeToFile(img, "out.png")
 	case "serial":
-		writer := getDummyWriter()
+		writer := getSerialWriter()
 		defer writer.Close()
 		for {
 			img := generateImage(false)
