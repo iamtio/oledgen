@@ -24,11 +24,15 @@ var serialPort string
 var seriallBaud int
 var runMode string
 var sleepTime time.Duration
+var imageWidth int
+var imageHeight int
 
 func init() {
 	flag.StringVar(&serialPort, "port", "", "Serial port connects to")
 	flag.IntVar(&seriallBaud, "baud", 115200, "Serail port baudrate")
 	flag.StringVar(&runMode, "mode", "", "Run mode: ascii, image, serial")
+	flag.IntVar(&imageWidth, "width", 128, "Image width")
+	flag.IntVar(&imageHeight, "height", 64, "Image height")
 	flag.DurationVar(&sleepTime, "sleep", 1*time.Second, "Sleep between sendings")
 }
 func addLabel(img *image.RGBA, x, y int, label string) {
@@ -48,7 +52,7 @@ func drawText(img *image.RGBA, line int, label string) {
 	addLabel(img, 1, height*line, label)
 }
 
-func generateImage(first bool) *image.RGBA {
+func generateImage(first bool, width, height int) *image.RGBA {
 	vMem, err := mem.VirtualMemory()
 	if err != nil {
 		panic(err)
@@ -63,7 +67,7 @@ func generateImage(first bool) *image.RGBA {
 		panic(err)
 	}
 
-	img := image.NewRGBA(image.Rect(0, 0, 128, 64))
+	img := image.NewRGBA(image.Rect(0, 0, width, height))
 
 	drawText(img, 1, fmt.Sprintf("ram:%7.2f/%.2f", float64(vMem.Used)/1024.0/1024.0/1024.0, float64(vMem.Total)/1024.0/1024.0/1024.0))
 	for i := 0; i < len(cpus) && i < 4; i++ { // Limit to 4 cpus due to screen size
@@ -143,18 +147,18 @@ func main() {
 	flag.Parse()
 	switch runMode {
 	case "ascii":
-		img := generateImage(true)
+		img := generateImage(true, imageWidth, imageHeight)
 		blob := getBlob(img, color.RGBA{0, 0, 0, 255})
 		printBlob(blob, 16)
 		fmt.Print("\n")
 	case "image":
-		img := generateImage(true)
+		img := generateImage(true, imageWidth, imageHeight)
 		writeToFile(img, "out.png")
 	case "serial":
 		writer := getSerialWriter()
 		defer writer.Close()
 		for {
-			img := generateImage(false)
+			img := generateImage(false, imageWidth, imageHeight)
 			blob := getBlob(img, color.RGBA{0, 0, 0, 255})
 			_, err := writer.Write(blob)
 			if err != nil {
