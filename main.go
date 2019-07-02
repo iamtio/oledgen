@@ -49,16 +49,23 @@ func drawText(img *image.RGBA, line int, label string) {
 }
 
 func generateImage(first bool) *image.RGBA {
-	v, _ := mem.VirtualMemory()
-	var ones time.Duration
-	if first {
-		ones, _ = time.ParseDuration("3s")
+	vMem, err := mem.VirtualMemory()
+	if err != nil {
+		panic(err)
 	}
-	cpus, _ := cpu.Percent(ones, true)
+
+	var measureDuration time.Duration
+	if first {
+		measureDuration = 1 * time.Second
+	}
+	cpus, err := cpu.Percent(measureDuration, true)
+	if err != nil {
+		panic(err)
+	}
 
 	img := image.NewRGBA(image.Rect(0, 0, 128, 64))
 
-	drawText(img, 1, fmt.Sprintf("ram:%7.2f/%.2f", float64(v.Used)/1024.0/1024.0/1024.0, float64(v.Total)/1024.0/1024.0/1024.0))
+	drawText(img, 1, fmt.Sprintf("ram:%7.2f/%.2f", float64(vMem.Used)/1024.0/1024.0/1024.0, float64(vMem.Total)/1024.0/1024.0/1024.0))
 	for i := 0; i < len(cpus) && i < 4; i++ { // Limit to 4 cpus due to screen size
 		drawText(img, 2+i, fmt.Sprintf("cpu%d:%6.2f %%", i+1, cpus[i]))
 	}
@@ -110,18 +117,18 @@ func printBlob(blob []uint8, bytesLineSize int) {
 	}
 }
 
-type w struct{}
+type dummyWriter struct{}
 
-func (w) Write(b []byte) (int, error) {
+func (dummyWriter) Write(b []byte) (int, error) {
 	log.Printf("successfuly wrote: %d bytes\n", len(b))
 	return len(b), nil
 }
-func (w) Close() error {
+func (dummyWriter) Close() error {
 	log.Printf("Closed dummy writer")
 	return nil
 }
 func getDummyWriter() io.WriteCloser {
-	return &w{}
+	return &dummyWriter{}
 }
 func getSerialWriter() io.WriteCloser {
 	c := &serial.Config{Name: serialPort, Baud: seriallBaud}
