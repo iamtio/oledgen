@@ -35,7 +35,7 @@ func addLabel(img *image.RGBA, x, y int, label string) {
 }
 
 func drawText(img *image.RGBA, line int, label string) {
-	const height int = 11
+	const height int = 12
 	addLabel(img, 1, height*line, label)
 }
 
@@ -49,9 +49,9 @@ func generateImage(first bool) *image.RGBA {
 
 	img := image.NewRGBA(image.Rect(0, 0, 128, 64))
 
-	drawText(img, 1, fmt.Sprintf("ram: %.2f/%.2f Gb", float64(v.Used)/1024.0/1024.0/1024.0, float64(v.Total)/1024.0/1024.0/1024.0))
-	for i := 0; i < len(cpus); i++ {
-		drawText(img, 2+i, fmt.Sprintf("cpu%d: %5.2f %%", i+1, cpus[i]))
+	drawText(img, 1, fmt.Sprintf("ram:%7.2f/%.2f", float64(v.Used)/1024.0/1024.0/1024.0, float64(v.Total)/1024.0/1024.0/1024.0))
+	for i := 0; i < len(cpus) && i < 4; i++ { // Limit to 4 cpus due to screen size
+		drawText(img, 2+i, fmt.Sprintf("cpu%d:%6.2f %%", i+1, cpus[i]))
 	}
 	return img
 }
@@ -88,20 +88,13 @@ func getBlob(img *image.RGBA, positiveColor color.RGBA) []uint8 {
 	return blob
 }
 func printByte(b uint8) {
-	fmt.Printf("%d%d%d%d%d%d%d%d",
-		(b>>0)&1,
-		(b>>1)&1,
-		(b>>2)&1,
-		(b>>3)&1,
-		(b>>4)&1,
-		(b>>5)&1,
-		(b>>6)&1,
-		(b>>7)&1,
-	)
+	for bit := uint(0); bit < 8; bit++ {
+		fmt.Print((b >> bit) & 1)
+	}
 }
 func printBlob(blob []uint8, bytesLineSize int) {
 	for index, b := range blob {
-		if index%bytesLineSize == 0 && index != 0 {
+		if index > 0 && index%bytesLineSize == 0 {
 			fmt.Printf("\n")
 		}
 		printByte(b)
