@@ -1,4 +1,4 @@
-*.png
+out*.png
 *.exe
 vendor/
 .idea/
