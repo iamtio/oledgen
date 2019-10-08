@@ -153,6 +153,7 @@ func main() {
 		fmt.Print("\n")
 	case "image":
 		img := generateImage(true, imageWidth, imageHeight)
+		getSprites()
 		writeToFile(img, "out.png")
 	case "serial":
 		writer := getSerialWriter()
