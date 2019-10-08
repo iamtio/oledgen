@@ -73,6 +73,8 @@ func generateImage(first bool, width, height int) *image.RGBA {
 	for i := 0; i < len(cpus) && i < 4; i++ { // Limit to 4 cpus due to screen size
 		drawText(img, 2+i, fmt.Sprintf("cpu%d:%6.2f %%", i+1, cpus[i]))
 	}
+	// sprites := getSprites()
+	// draw.Draw(img, sprites[0].Bounds(), sprites[2], image.ZP, draw.Src)
 	return img
 }
 func writeToFile(img *image.RGBA, fileName string) {
@@ -153,7 +155,6 @@ func main() {
 		fmt.Print("\n")
 	case "image":
 		img := generateImage(true, imageWidth, imageHeight)
-		getSprites()
 		writeToFile(img, "out.png")
 	case "serial":
 		writer := getSerialWriter()
