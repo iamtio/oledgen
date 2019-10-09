@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	"image/draw"
 	"image/png"
 	"io"
 	"log"
@@ -26,6 +27,7 @@ var runMode string
 var sleepTime time.Duration
 var imageWidth int
 var imageHeight int
+var sprites []*image.RGBA = getSprites()
 
 func init() {
 	flag.StringVar(&serialPort, "port", "", "Serial port connects to")
@@ -68,13 +70,17 @@ func generateImage(first bool, width, height int) *image.RGBA {
 	}
 
 	img := image.NewRGBA(image.Rect(0, 0, width, height))
+	// Ram sprite
+	draw.Draw(img, image.Rectangle{image.Point{0, 0}, image.Point{16, 16}}, sprites[1], image.ZP, draw.Src)
+	// Ram text
+	drawText(img, 1, fmt.Sprintf("%7.2f/%.2f", float64(vMem.Used)/1024.0/1024.0/1024.0, float64(vMem.Total)/1024.0/1024.0/1024.0))
+	// Cpu icon
+	draw.Draw(img, image.Rectangle{image.Point{0, 16}, image.Point{16, 32}}, sprites[0], image.ZP, draw.Src)
 
-	drawText(img, 1, fmt.Sprintf("ram:%7.2f/%.2f", float64(vMem.Used)/1024.0/1024.0/1024.0, float64(vMem.Total)/1024.0/1024.0/1024.0))
 	for i := 0; i < len(cpus) && i < 4; i++ { // Limit to 4 cpus due to screen size
-		drawText(img, 2+i, fmt.Sprintf("cpu%d:%6.2f %%", i+1, cpus[i]))
+		drawText(img, 2+i, fmt.Sprintf("   %d:%6.2f %%", i+1, cpus[i]))
 	}
-	// sprites := getSprites()
-	// draw.Draw(img, sprites[0].Bounds(), sprites[2], image.ZP, draw.Src)
+
 	return img
 }
 func writeToFile(img *image.RGBA, fileName string) {
