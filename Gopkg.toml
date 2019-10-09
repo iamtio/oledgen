@@ -27,7 +27,7 @@
 
 [[constraint]]
   name = "github.com/shirou/gopsutil"
-  version = "2.19.6"
+  version = "2.19.9"
 
 [[constraint]]
   branch = "master"
@@ -35,7 +35,7 @@
 
 [prune]
   go-tests = true
-  unused-packages = true
+  #unused-packages = true
 
 [[constraint]]
   branch = "master"

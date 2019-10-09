@@ -17,6 +17,7 @@ import (
 	"golang.org/x/image/math/fixed"
 
 	"github.com/shirou/gopsutil/cpu"
+	"github.com/shirou/gopsutil/disk"
 	"github.com/shirou/gopsutil/mem"
 	"github.com/tarm/serial"
 )
@@ -32,7 +33,7 @@ var sprites []*image.RGBA = getSprites()
 func init() {
 	flag.StringVar(&serialPort, "port", "", "Serial port connects to")
 	flag.IntVar(&seriallBaud, "baud", 115200, "Serail port baudrate")
-	flag.StringVar(&runMode, "mode", "", "Run mode: ascii, image, serial")
+	flag.StringVar(&runMode, "mode", "", "Run mode: ascii, image, serial, show-disks")
 	flag.IntVar(&imageWidth, "width", 128, "Image width")
 	flag.IntVar(&imageHeight, "height", 64, "Image height")
 	flag.DurationVar(&sleepTime, "sleep", 1*time.Second, "Sleep between sendings")
@@ -81,6 +82,10 @@ func generateImage(first bool, width, height int) *image.RGBA {
 		drawText(img, 2+i, fmt.Sprintf("   %d:%6.2f %%", i+1, cpus[i]))
 	}
 
+	// stats, _ := disk.IOCounters("/dev/dm-0")
+	// for k, v := range stats {
+	// 	fmt.Printf("%s => %s", k, v)
+	// }
 	return img
 }
 func writeToFile(img *image.RGBA, fileName string) {
@@ -117,7 +122,11 @@ func getBlob(img *image.RGBA, positiveColor color.RGBA) []uint8 {
 }
 func printByte(b uint8) {
 	for bit := uint(0); bit < 8; bit++ {
-		fmt.Print((b >> bit) & 1)
+		if (b>>bit)&1 == 1 {
+			fmt.Print("*")
+		} else {
+			fmt.Print(" ")
+		}
 	}
 }
 func printBlob(blob []uint8, bytesLineSize int) {
@@ -129,19 +138,6 @@ func printBlob(blob []uint8, bytesLineSize int) {
 	}
 }
 
-type dummyWriter struct{}
-
-func (dummyWriter) Write(b []byte) (int, error) {
-	log.Printf("successfuly wrote: %d bytes\n", len(b))
-	return len(b), nil
-}
-func (dummyWriter) Close() error {
-	log.Printf("Closed dummy writer")
-	return nil
-}
-func getDummyWriter() io.WriteCloser {
-	return &dummyWriter{}
-}
 func getSerialWriter() io.WriteCloser {
 	c := &serial.Config{Name: serialPort, Baud: seriallBaud}
 	s, err := serial.OpenPort(c)
@@ -173,6 +169,11 @@ func main() {
 				panic(err)
 			}
 			time.Sleep(sleepTime)
+		}
+	case "show-disks":
+		partitions, _ := disk.Partitions(false)
+		for _, p := range partitions {
+			fmt.Printf("%s => %s\n", p.Device, p.Mountpoint)
 		}
 	default:
 		fmt.Println("Nothing to do! write -mode flag to run something!")
