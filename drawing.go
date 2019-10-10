@@ -47,12 +47,17 @@ func generateImage(first bool, width, height int) *image.RGBA {
 	}
 
 	img := image.NewRGBA(image.Rect(0, 0, width, height))
-	// Ram sprite
+	// RAM sprite
 	draw.Draw(img, image.Rectangle{image.Point{0, 0}, image.Point{16, 16}}, sprites[1], image.ZP, draw.Src)
-	// Ram text
-	drawText(img, 1, fmt.Sprintf("%7.2f/%.2f", float64(vMem.Used)/1024.0/1024.0/1024.0, float64(vMem.Total)/1024.0/1024.0/1024.0))
+	// RAM bar
+	bar := NewBar(74, 9, color.RGBA{0, 0, 0, 255})
+	barImg, _ := bar.GetBar(vMem.UsedPercent*0.01, false)
+	draw.Draw(img, image.Rectangle{image.Point{17, 3}, image.Point{width, height}}, barImg, image.ZP, draw.Src)
+
+	// RAM text
+	drawText(img, 1, fmt.Sprintf("%18.2f", float64(vMem.Used)/1024.0/1024.0/1024.0))
 	// Cpu icon
-	draw.Draw(img, image.Rectangle{image.Point{0, 16}, image.Point{16, 32}}, sprites[0], image.ZP, draw.Src)
+	draw.Draw(img, image.Rectangle{image.Point{0, 18}, image.Point{width, height}}, sprites[0], image.ZP, draw.Src)
 
 	for i := 0; i < len(cpus) && i < 4; i++ { // Limit to 4 cpus due to screen size
 		drawText(img, 2+i, fmt.Sprintf("   %d:%6.2f %%", i+1, cpus[i]))
@@ -62,9 +67,5 @@ func generateImage(first bool, width, height int) *image.RGBA {
 	// for k, v := range stats {
 	// 	fmt.Printf("%s => %s", k, v)
 	// }
-
-	// bar := NewBar(8, 32, color.RGBA{0, 0, 0, 255})
-	// barImg, _ := bar.GetBar(0.5, true)
-	// draw.Draw(img, barImg.Bounds(), barImg, image.ZP, draw.Src)
 	return img
 }
