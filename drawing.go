@@ -62,8 +62,9 @@ func generateImage(first bool, width, height int) *image.RGBA {
 	// for k, v := range stats {
 	// 	fmt.Printf("%s => %s", k, v)
 	// }
-	bar := NewBar(8, 32, color.RGBA{0, 0, 0, 255})
-	barImg, _ := bar.GetBar(1, true)
-	draw.Draw(img, barImg.Bounds(), barImg, image.ZP, draw.Src)
+
+	// bar := NewBar(8, 32, color.RGBA{0, 0, 0, 255})
+	// barImg, _ := bar.GetBar(0.5, true)
+	// draw.Draw(img, barImg.Bounds(), barImg, image.ZP, draw.Src)
 	return img
 }

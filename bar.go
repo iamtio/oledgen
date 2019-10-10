@@ -8,7 +8,7 @@ import (
 
 // Bar chart
 type Bar struct {
-	width, height                int
+	width, height, border        int
 	positiveColor, negativeColor color.RGBA
 	img                          *image.RGBA
 }
@@ -19,11 +19,11 @@ func (b *Bar) GetBar(value float64, vertical bool) (*image.RGBA, error) {
 	var cutFrom, cutTo image.Point
 
 	if vertical {
-		cutFrom = image.Point{1, 1}
-		cutTo = image.Point{b.width - 1, b.height - int((float64(b.height) * value)) - 1}
+		cutFrom = image.Point{b.border, b.border}
+		cutTo = image.Point{b.width - b.border, b.height - int((float64(b.height-b.border*2) * value)) - b.border}
 	} else {
-		cutFrom = image.Point{1 + int((float64(b.width) * value)), 1}
-		cutTo = image.Point{b.width - 1, b.height - 1}
+		cutFrom = image.Point{b.border + int((float64(b.width-b.border*2) * value)), b.border}
+		cutTo = image.Point{b.width - b.border, b.height - b.border}
 	}
 	draw.Draw(b.img, image.Rectangle{cutFrom, cutTo}, &image.Uniform{b.negativeColor}, image.ZP, draw.Src)
 	return b.img, nil
@@ -32,5 +32,5 @@ func (b *Bar) GetBar(value float64, vertical bool) (*image.RGBA, error) {
 // NewBar is constructor for Bar struct
 func NewBar(width, height int, positiveColor color.RGBA) *Bar {
 	negativeColor := color.RGBA{0, 0, 0, 0}
-	return &Bar{width, height, positiveColor, negativeColor, image.NewRGBA(image.Rect(0, 0, width, height))}
+	return &Bar{width, height, 1, positiveColor, negativeColor, image.NewRGBA(image.Rect(0, 0, width, height))}
 }
