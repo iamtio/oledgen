@@ -42,6 +42,7 @@ func generateImage(first bool, width, height int) *image.RGBA {
 		measureDuration = 1 * time.Second
 	}
 	cpus, err := cpu.Percent(measureDuration, true)
+	cpusTotal, err := cpu.Percent(measureDuration, false)
 	if err != nil {
 		panic(err)
 	}
@@ -58,11 +59,15 @@ func generateImage(first bool, width, height int) *image.RGBA {
 	drawText(img, 1, fmt.Sprintf("%18.2f", float64(vMem.Used)/1024.0/1024.0/1024.0))
 	// Cpu icon
 	draw.Draw(img, image.Rectangle{image.Point{0, 18}, image.Point{width, height}}, sprites[0], image.ZP, draw.Src)
-
-	for i := 0; i < len(cpus) && i < 4; i++ { // Limit to 4 cpus due to screen size
-		drawText(img, 2+i, fmt.Sprintf("   %d:%6.2f %%", i+1, cpus[i]))
+	// Cpu bars
+	cpuBarWidth := 111 / len(cpus)
+	for i := 0; i < len(cpus) && i < 12; i++ { // Limit to 12 cpus due to screen size
+		bar := NewBar(cpuBarWidth, 30, color.RGBA{0, 0, 0, 255})
+		barImg, _ := bar.GetBar(cpus[i]*0.01, true)
+		draw.Draw(img, image.Rectangle{image.Point{17 + i*(cpuBarWidth-1), 18}, image.Point{width, height}}, barImg, image.ZP, draw.Src)
+		// drawText(img, 2+i, fmt.Sprintf("   %d:%6.2f %%", i+1, cpus[i]))
 	}
-
+	drawText(img, 5, fmt.Sprintf("%8.2f%%", cpusTotal[0]))
 	// stats, _ := disk.IOCounters("/dev/dm-0")
 	// for k, v := range stats {
 	// 	fmt.Printf("%s => %s", k, v)
