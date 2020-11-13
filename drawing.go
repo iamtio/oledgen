@@ -60,8 +60,10 @@ func generateImage(first bool, width, height int) *image.RGBA {
 	// Cpu icon
 	draw.Draw(img, image.Rectangle{image.Point{0, 18}, image.Point{width, height}}, sprites[0], image.ZP, draw.Src)
 	// Cpu bars
-	cpuBarWidth := 111 / len(cpus)
-	for i := 0; i < len(cpus) && i < 12; i++ { // Limit to 12 cpus due to screen size
+
+	// cpuBarWidth := 111 / len(cpus)
+	cpuBarWidth := 5                           // should be counted manually
+	for i := 0; i < len(cpus) && i < 32; i++ { // Limit to 12 cpus due to screen size
 		bar := NewBar(cpuBarWidth, 30, color.RGBA{0, 0, 0, 255})
 		barImg, _ := bar.GetBar(cpus[i]*0.01, true)
 		draw.Draw(img, image.Rectangle{image.Point{17 + i*(cpuBarWidth-1), 18}, image.Point{width, height}}, barImg, image.ZP, draw.Src)
