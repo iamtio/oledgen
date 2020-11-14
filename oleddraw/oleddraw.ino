@@ -54,23 +54,27 @@ void setup() {
 
 void loop() {
   byte b;
-  int c = 0;
+  unsigned int c = 0;
+  const int sleep = 10;
   display.clearDisplay();
   for(size_t readed = 0; readed < (SCREEN_WIDTH*SCREEN_HEIGHT/8); readed++) {
     while(!(Serial.available() > 0)){
-      delay(10);
-      if(c++ > (deepTimeout/10)){
+      delay(sleep);
+      if(c > deepTimeout){
         display.clearDisplay();
         display.display();
-        delay(10);
         continue;
       }
-      if(c++ > (timeout/10)){
+      if(c > timeout){
         drawNoData();
         display.clearDisplay();
-        delay(10);
+        c += sleep;
         continue;
       }
+      c += sleep;
+    }
+    if (c > 0) {
+      return;
     }
 //    display.clearDisplay();
     b = Serial.read();
