@@ -1,3 +1,10 @@
+// Arduino IDE Installing
+// 1. Add https://raw.githubusercontent.com/sparkfun/Arduino_Boards/master/IDE_Board_Manager/package_sparkfun_index.json
+//    to borad manager URLs. For details read https://learn.sparkfun.com/tutorials/pro-micro--fio-v3-hookup-guide#windows_boardaddon
+// 2. Install Sparkfun AVR Boards in boards manager
+// 3. Install Adafruit GFX Library
+// 4. Install Adafruit SSD1306 Library
+// 5. Install Adafruit BusIO Library
 
 #include <SPI.h>
 #include <Wire.h>
@@ -9,6 +16,7 @@
 
 const size_t bytesLineSize = SCREEN_WIDTH / 8;
 const int timeout = 10000;
+const int deepTimeout = 30000;
 // Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
 #define OLED_RESET     4 // Reset pin # (or -1 if sharing Arduino reset pin)
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
@@ -23,7 +31,8 @@ void drawNoData(){
 
   // Not all the characters will fit on the display. This is normal.
   // Library will draw what it can and the rest will be clipped.
-  display.println("No data.\nRun host application\non your PC.");
+  display.println("No data.\nRun host application\non your PC.\n");
+  display.println("github.com/iamtio/oledgen");
   display.setCursor(55, 54);
   display.println("TIO (c) 2019");
   display.display();
@@ -50,10 +59,17 @@ void loop() {
   for(size_t readed = 0; readed < (SCREEN_WIDTH*SCREEN_HEIGHT/8); readed++) {
     while(!(Serial.available() > 0)){
       delay(10);
+      if(c++ > (deepTimeout/10)){
+        display.clearDisplay();
+        display.display();
+        delay(10);
+        continue;
+      }
       if(c++ > (timeout/10)){
         drawNoData();
         display.clearDisplay();
         delay(10);
+        continue;
       }
     }
 //    display.clearDisplay();
